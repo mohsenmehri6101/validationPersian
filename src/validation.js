@@ -1,5 +1,7 @@
-export default class validation{
-    constructor(idForm,validationsAndInputs){
+export default class validation
+{
+    constructor(idForm,validationsAndInputs)
+    {
         /* define variables */
         this.inputs = Object.keys(validationsAndInputs)
         this.validations = Object.values(validationsAndInputs)
@@ -8,7 +10,6 @@ export default class validation{
         this.settingShowErrors=this.defaultSettingShowErrors()
         this.attributes=this.defaultAttributes()
         /* define variables */
-
         /* define listener for every thing change in form */
         this.listenerForm()
         /* define listener for every thing change in form */
@@ -16,7 +17,7 @@ export default class validation{
 
     listenerForm(){
         this.form.addEventListener('keyup',event=>{
-            /*console.log("keyup")*/
+            // console.log('this.run() : ',this.run())
             this.run() ? this.stopSendForm(this.form) : this.allowSendForm(this.form);
         });
     }
@@ -105,7 +106,7 @@ export default class validation{
     getValueInput(input){
         for (let inputObject of this.form) {
             if(inputObject.name === input) {
-                return inputObject.value;
+                return inputObject.value!='' ? inputObject.value : null;
             }
         }
         return null;
@@ -122,16 +123,40 @@ export default class validation{
     }
 
     createStringEval(rule,functionName,valueInput){
+        // console.log('*****\n')
+        // console.log('rule : ',rule);
+        // console.log('functionName : ',functionName);
+        // console.log('valueInput : ',valueInput)
+        // console.log('rule functionName valueInput',rule,functionName,valueInput)
+        console.log('*****\n')
         let list=rule.split(':');
         return list.length==1 ? "this."+list[0]+"('"+valueInput+"')" :  "this."+list[0]+"('"+valueInput+"','"+list[1]+"')";
     }
 
+    executeFunctionByName(functionName,valueInput,rule){
+        switch(functionName) 
+        {
+            case 'required':
+            {
+                return this.required(valueInput);
+                break;
+            }
+            default:
+            {
+                return false;
+            }
+        } 
+          return true;
+    }
+
     run(){
-        let errorIsOrNot=false;
+        let haveError=false;
         this.inputs.forEach((input,index) =>
         {
             // get value input
             let valueInput=this.getValueInput(input);
+            // console.log(`valueInput ${input} is : `,valueInput,'type of : ',typeof valueInput)
+            // return ;
             // get functions name
             let rules=this.validations[index].split('|');
             // check input and run functions validation validations ['required','email','numeric',....]
@@ -140,11 +165,12 @@ export default class validation{
             {
                 // this.settingShowErrors=this.defaultSettingShowErrors()
                 let functionName=rule.split(':')[0];
-                let stringEval=this.createStringEval(rule,functionName,valueInput);
-                if(! eval(stringEval))
+                // console.log('funcitonName : ',functionName,'rule : ',rule,' valueInput : ',valueInput)
+                // let stringEval=this.createStringEval('rule functionName valueInput',rule,functionName,valueInput);
+                if(!this.executeFunctionByName(functionName,rule,valueInput))
                 {
                     forEnd=false;
-                    errorIsOrNot=true;
+                    haveError=true;
                     this.showError(input,functionName);
                     break;
                 }
@@ -153,7 +179,7 @@ export default class validation{
                 this.deleteShowError(input);
             }
         });
-        return errorIsOrNot;
+        return haveError;
     }
 
     getIdElement(input){
